@@ -150,4 +150,8 @@ for opt, arg in opts:
     elif opt in ("-o"):
         output_path = arg
 
+if not image_path:
+    printHelp()
+    sys.exit()
+
 process(image_path, percent, gray_scale, output_path, technic)

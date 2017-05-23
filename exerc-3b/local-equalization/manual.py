@@ -40,14 +40,7 @@ if ( (window_size % 2) == 0 ):
     print "The window size must be odd."
     sys.exit()
 
-time_start = datetime.datetime.now()
-
 img = cv2.imread(image_path, 0)
-y_original,x_original = img.shape
-
-padding = int(window_size/2)
-img = np.lib.pad(img, (padding, padding), 'symmetric')
-
 y,x = img.shape
 
 if not ( ( 3 <= window_size <= x) or ( 3 <= window_size <= y ) ):
@@ -57,6 +50,7 @@ if not ( ( 3 <= window_size <= x) or ( 3 <= window_size <= y ) ):
 
 x_current = 0
 y_current = 0
+window_pixels = window_size * window_size
 new_img = np.zeros([y,x],dtype=np.uint8)
 
 for y_current in range(y):
@@ -70,61 +64,41 @@ for y_current in range(y):
             x_next_window = x
 
         # print x_current, y_current
-        # print x_next_window, y_next_window
 
         window = img[y_current:y_next_window, x_current:x_next_window]
-        l_y, l_x = window.shape
-        window_pixels = l_y * l_x
-        # map = {}
-        # for i in range(l_y):
-        #     for j in range(l_x):
-        #         l_color = window[i,j]
-        #         if l_color in map:
-        #             map[l_color] = map[l_color] + 1
-        #         else:
-        #             map[l_color] = 1
         # print window
-        window = cv2.equalizeHist(window)
-        # hist = cv2.calcHist([window],[0] ,None,[256],[0,256])
-        # plt.plot(hist,color = 'b')
+        l_y, l_x = window.shape
+        map = {}
+        for i in range(l_y):
+            for j in range(l_x):
+                l_color = window[i,j]
+                if l_color in map:
+                    map[l_color] = map[l_color] + 1
+                else:
+                    map[l_color] = 1
 
-        # # print hist
-        # map = {}
-        # # print hist
-        # l_comulative = 0.0
-        # for index, key in enumerate(hist):
-        #     # print index
-        #     intensity = hist[index]
-        #     # print intensity
-        #     if intensity > 0 :
-        #         intensity = float(intensity)
-        #         prob = (intensity / window_pixels) * 256
-        #         l_comulative = l_comulative + prob
-        #         map[index] = l_comulative
+        l_comulative = 0.0
+        for key in map:
+            intensity = float(map[key])
+            prob = (intensity / window_pixels) * 256
+            l_comulative = l_comulative + prob
+            map[key] = l_comulative
 
         # print map
-        # plt.plot(map,color = 'r')
-        # plt.xlim([0,256])
-        # plt.savefig("hist.png")
-        # sys.exit()
+
         middle_window_x = (l_x) / 2
         middle_window_y = (l_y) / 2
 
         # print "middle_window",middle_window_y, middle_window_x
-        # print img[middle_window_y,middle_window_x]
         middle_img_y = y_current + ( (y_next_window - y_current) / 2 )
         middle_img_x = x_current + ( (x_next_window - x_current) / 2 )
 
         # print "middle_img", middle_img_y, middle_img_x
         # print new_img[middle_img_y, middle_img_x]
-        # print window[middle_window_y, middle_window_x]
         # print map[window[middle_window_y, middle_window_x]]
-        # sys.exit()
 
-        # new_img[middle_img_y, middle_img_x] = int (map[window[middle_window_y, middle_window_x]])
-        new_img[middle_img_y, middle_img_x] = window[middle_window_y, middle_window_x]
+
+        new_img[middle_img_y, middle_img_x] = int (map[window[middle_window_y, middle_window_x]])
         # print new_img[middle_img_y, middle_img_x]
-cv2.imwrite("./out_{}.png".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")),new_img[padding:y_original+padding, padding:x_original+padding])
 
-time_end = datetime.datetime.now()
-print "Executed in {}".format(time_end - time_start)
+cv2.imwrite("./out_{}.png".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")),new_img)
