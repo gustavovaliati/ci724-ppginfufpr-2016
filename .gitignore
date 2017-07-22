@@ -1,3 +1,4 @@
 bins/
 images/
 *.tar.gz
+knn-dataset/
